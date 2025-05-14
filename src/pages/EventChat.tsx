@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Users, Calendar, MapPin, Link2, Share2 } from 'lucide-react';
+import { ArrowLeft, Send, Users, Calendar, MapPin, Link2, Share2, X } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Message {

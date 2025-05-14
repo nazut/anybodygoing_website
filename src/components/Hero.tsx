@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import SignupForm from './SignupForm';
 
 const Hero: React.FC = () => {
   return (
@@ -15,19 +15,15 @@ const Hero: React.FC = () => {
         <div className="flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-12 md:mb-0 text-center md:text-left">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 animate-fade-in">
-              Never Attend Events <br /><span className="text-teal-300">Alone</span> Again
+              Create Meaningful <br /><span className="text-teal-300">Connections</span> at Events
             </h1>
             <p className="text-xl md:text-2xl text-white/80 mb-8 max-w-xl animate-fade-in animation-delay-300">
-              Find like-minded people at events you're already planning to attend. Make connections, share experiences.
+              Find people with shared interests at events you're attending or list your own events to meet others. Build memorable experiences together.
             </p>
+            <div className="mb-8 animate-fade-in animation-delay-600">
+              <SignupForm variant="compact" />
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start animate-fade-in animation-delay-600">
-              <a 
-                href="#signup" 
-                className="bg-white text-purple-700 px-8 py-3 rounded-full font-medium text-lg hover:bg-gray-100 transition-colors shadow-lg flex items-center justify-center"
-              >
-                Get Started
-                <ArrowRight size={18} className="ml-2" />
-              </a>
               <a 
                 href="#how-it-works" 
                 className="bg-transparent text-white border-2 border-white px-8 py-3 rounded-full font-medium text-lg hover:bg-white/10 transition-colors"

@@ -28,7 +28,7 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <span className={`font-bold text-2xl ${isScrolled ? 'text-purple-700' : 'text-white'}`}>
-              EventBuddy
+              AnybodyGoing
             </span>
           </div>
 

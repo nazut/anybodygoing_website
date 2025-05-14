@@ -71,7 +71,7 @@ const Browse: React.FC = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-8">
-              <h1 className="text-2xl font-bold text-purple-600">EventBuddy</h1>
+              <h1 className="text-2xl font-bold text-purple-600">AnybodyGoing</h1>
               <div className="relative flex items-center">
                 <input
                   type="text"

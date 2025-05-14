@@ -8,7 +8,17 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const SignupForm: React.FC = () => {
+interface SignupFormProps {
+  variant?: 'full' | 'compact';
+  title?: string;
+  description?: string;
+}
+
+const SignupForm: React.FC<SignupFormProps> = ({ 
+  variant = 'full', 
+  title = 'Join Our Waitlist',
+  description = 'Be the first to know when we launch and get early access to connect with others at your favorite events.'
+}) => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -29,7 +39,7 @@ const SignupForm: React.FC = () => {
         .from('waitlist')
         .insert([{ 
           email,
-          subscribed_to_updates: true // Set based on checkbox value
+          subscribed_to_updates: true
         }]);
 
       if (error) throw error;
@@ -43,14 +53,54 @@ const SignupForm: React.FC = () => {
     }
   };
 
+  if (variant === 'compact') {
+    return (
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+        <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your email address"
+            disabled={status === 'loading' || status === 'success'}
+            className={`flex-1 px-4 py-3 rounded-lg border ${
+              status === 'error' ? 'border-red-300' : 'border-transparent'
+            } focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/90`}
+            required
+          />
+          <button
+            type="submit"
+            disabled={status === 'loading' || status === 'success'}
+            className={`px-6 py-3 rounded-lg font-medium text-white flex items-center justify-center
+                      ${status === 'success' ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700'} 
+                      transition-colors shadow-md`}
+          >
+            {status === 'loading' && <Loader2 size={20} className="mr-2 animate-spin" />}
+            {status === 'success' && <CheckCircle size={20} className="mr-2" />}
+            {status === 'idle' && 'Join Waitlist'}
+            {status === 'loading' && 'Signing Up...'}
+            {status === 'error' && 'Try Again'}
+            {status === 'success' && 'Thanks!'}
+          </button>
+        </form>
+        {status === 'error' && (
+          <p className="mt-2 text-red-200 text-sm">{errorMessage}</p>
+        )}
+        {status === 'success' && (
+          <p className="mt-2 text-green-200 text-sm">You've been added to our waitlist!</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <section id="signup" className="py-16 md:py-24 bg-white">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Join Our Waitlist</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{title}</h2>
             <p className="text-xl text-gray-600">
-              Be the first to know when we launch and get early access to connect with others at your favorite events.
+              {description}
             </p>
           </div>
 
@@ -75,17 +125,6 @@ const SignupForm: React.FC = () => {
                 {status === 'error' && (
                   <p className="mt-1 text-red-500 text-sm">{errorMessage}</p>
                 )}
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  id="updates"
-                  type="checkbox"
-                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                />
-                <label htmlFor="updates" className="ml-2 block text-sm text-gray-700">
-                  I want to receive updates and news via email
-                </label>
               </div>
 
               <button
