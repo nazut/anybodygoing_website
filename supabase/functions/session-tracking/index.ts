@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Follow this setup guide to integrate the Deno runtime into your application:
 // https://deno.land/manual/examples/supabase_oauth
 
@@ -102,7 +103,10 @@ serve(async (req) => {
     
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: "Check logs for more information" 
+      }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400 

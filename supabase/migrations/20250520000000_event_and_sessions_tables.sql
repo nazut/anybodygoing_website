@@ -44,27 +44,6 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 COMMENT ON TABLE sessions IS 'Analytics tracking for site visitors';
 
--- Create function for capturing IP address
-CREATE OR REPLACE FUNCTION capture_ip_address_for_session()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.ip_address = request.header('x-forwarded-for')::text;
-  IF NEW.ip_address IS NULL THEN
-    NEW.ip_address = request.header('CF-Connecting-IP')::text;
-  END IF;
-  IF NEW.ip_address IS NULL THEN
-    NEW.ip_address = request.header('X-Real-IP')::text;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Add trigger for capturing IP address on session creation
-CREATE TRIGGER capture_ip_address
-BEFORE INSERT ON sessions
-FOR EACH ROW
-EXECUTE FUNCTION capture_ip_address_for_session();
-
 -- Add function to update timestamp
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$

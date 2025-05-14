@@ -305,34 +305,34 @@ const EventShowcase: React.FC = () => {
       // Insert the event into the event_submissions table
       const { data: eventData, error: eventError } = await supabase
         .from('event_submissions')
-        .insert([newEvent])
-        .select('id')
-        .single();
+        .insert([newEvent]);
+        // .select('id')
+        // .single();
 
       if (eventError) throw eventError;
       
-      // Also add the email to the waitlist
-      const { error: waitlistError } = await supabase
-        .from('waitlist')
-        .insert([{ 
-          email: newEvent.email,
-          subscribed_to_updates: true
-        }]);
+      // // Also add the email to the waitlist
+      // const { error: waitlistError } = await supabase
+      //   .from('waitlist')
+      //   .insert([{ 
+      //     email: newEvent.email,
+      //     subscribed_to_updates: true
+      //   }]);
 
-      if (waitlistError) throw waitlistError;
+      // if (waitlistError) throw waitlistError;
       
-      // Update session to track this event submission
-      if (sessionId) {
-        await supabase
-          .from('sessions')
-          .update({
-            submitted_event: true,
-            joined_waitlist: true,
-            waitlist_email: newEvent.email,
-            event_submission_id: eventData.id
-          })
-          .eq('id', sessionId);
-      }
+      // // Update session to track this event submission
+      // if (sessionId) {
+      //   await supabase
+      //     .from('sessions')
+      //     .update({
+      //       submitted_event: true,
+      //       joined_waitlist: true,
+      //       waitlist_email: newEvent.email,
+      //       event_submission_id: eventData.id
+      //     })
+      //     .eq('id', sessionId);
+      // }
       
       setSubmitStatus('success');
       
