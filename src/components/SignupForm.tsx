@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { CheckCircle, Loader2 } from 'lucide-react';
 
@@ -7,6 +7,11 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Session tracking helper
+const getSessionId = (): string | null => {
+  return localStorage.getItem('session_id');
+};
 
 interface SignupFormProps {
   variant?: 'full' | 'compact';
@@ -43,6 +48,18 @@ const SignupForm: React.FC<SignupFormProps> = ({
         }]);
 
       if (error) throw error;
+      
+      // Update session to track waitlist signup
+      const sessionId = getSessionId();
+      if (sessionId) {
+        await supabase
+          .from('sessions')
+          .update({
+            joined_waitlist: true,
+            waitlist_email: email
+          })
+          .eq('id', sessionId);
+      }
       
       setStatus('success');
       setEmail('');

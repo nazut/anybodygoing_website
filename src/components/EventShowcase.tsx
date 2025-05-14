@@ -1,12 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Music, Users, Star, Calendar, MapPin, Film, BookOpen, Coffee, Utensils, Gamepad2, Globe } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+
+// Add userAgentData typings
+interface NavigatorUAData {
+  platform: string;
+  brands: Array<{brand: string, version: string}>;
+  mobile: boolean;
+}
+
+declare global {
+  interface Navigator {
+    userAgentData?: NavigatorUAData;
+  }
+}
 
 // Create a single supabase client for the browser
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Session tracking via edge function
+const createOrUpdateSession = async () => {
+  try {
+    // Create a unique session ID if one doesn't exist
+    let sessionId = localStorage.getItem('session_id');
+    
+    // Get timezone
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    // Get browser info
+    const userAgent = navigator.userAgent;
+    
+    // Get locale info
+    const locale = navigator.language;
+    
+    // Screen size
+    const screenSize = `${window.screen.width}x${window.screen.height}`;
+    
+    // Platform
+    const platform = navigator.userAgentData?.platform || navigator.platform || 'unknown';
+    
+    // Referrer
+    const referrer = document.referrer;
+    
+    const sessionData = {
+      id: sessionId || undefined,
+      user_agent: userAgent,
+      timezone: timeZone,
+      locale,
+      screen_size: screenSize,
+      platform,
+      referrer
+    };
+    
+    // Call Edge Function to create/update session
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/session-tracking`;
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      },
+      body: JSON.stringify(sessionData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.id && !sessionId) {
+      // Store new session ID
+      localStorage.setItem('session_id', result.id);
+      return result.id;
+    }
+    
+    return sessionId;
+  } catch (error) {
+    console.error('Error tracking session:', error);
+    return localStorage.getItem('session_id');
+  }
+};
 
 const categories = [
   {
@@ -196,6 +273,17 @@ const EventShowcase: React.FC = () => {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [showAll, setShowAll] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  
+  // Initialize session tracking on component mount
+  useEffect(() => {
+    const initSession = async () => {
+      const id = await createOrUpdateSession();
+      setSessionId(id);
+    };
+    
+    initSession();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -214,10 +302,12 @@ const EventShowcase: React.FC = () => {
     setSubmitStatus('loading');
     
     try {
-      // Insert the event into a Supabase table
-      const { error: eventError } = await supabase
+      // Insert the event into the event_submissions table
+      const { data: eventData, error: eventError } = await supabase
         .from('event_submissions')
-        .insert([newEvent]);
+        .insert([newEvent])
+        .select('id')
+        .single();
 
       if (eventError) throw eventError;
       
@@ -230,6 +320,19 @@ const EventShowcase: React.FC = () => {
         }]);
 
       if (waitlistError) throw waitlistError;
+      
+      // Update session to track this event submission
+      if (sessionId) {
+        await supabase
+          .from('sessions')
+          .update({
+            submitted_event: true,
+            joined_waitlist: true,
+            waitlist_email: newEvent.email,
+            event_submission_id: eventData.id
+          })
+          .eq('id', sessionId);
+      }
       
       setSubmitStatus('success');
       
@@ -257,7 +360,6 @@ const EventShowcase: React.FC = () => {
     ? events 
     : events.filter(event => event.category === activeCategory);
 
-  // Limit the number of displayed events unless showAll is true
   const displayedEvents = showAll ? filteredEvents : filteredEvents.slice(0, 8);
 
   return (
